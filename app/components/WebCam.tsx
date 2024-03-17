@@ -1,12 +1,19 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import Webcam from "react-webcam";
 import * as faceapi from "face-api.js";
 
-export default function WebCamComponent() {
+interface WebCamComponentProps {
+  selectedNoggle: number;
+}
+
+export default function WebCamComponent({
+  selectedNoggle,
+}: WebCamComponentProps) {
   const webcamRef = useRef(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [selectedNoggles, setSelectedNoggles] = useState("");
 
   function loadModels() {
     return Promise.all([
@@ -23,6 +30,8 @@ export default function WebCamComponent() {
     console.log("video plays");
     const video = webcamRef.current.video;
     const canvas = canvasRef.current;
+
+    if (!canvas || !video) return;
 
     console.log("gets here");
     const ctx = canvas.getContext("2d");
@@ -46,7 +55,6 @@ export default function WebCamComponent() {
       const detections = await faceapi
         .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
         .withFaceLandmarks(true);
-
       const resizedDetections = faceapi.resizeResults(detections, displaySize);
 
       faceapi.draw.drawDetections(ctx, resizedDetections);
