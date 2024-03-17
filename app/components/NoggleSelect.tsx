@@ -14,10 +14,9 @@ export default function NoggleSelector({
   setSelectedNoggle,
 }: NoggleSelector) {
   const noggles = Array.from({ length: 21 }, (_, i) => `/noggles/${i}.png`);
-  const containerRef = useRef();
 
   return (
-    <div ref={containerRef} className="flex overflow-x scroll-smooth">
+    <div className="flex overflow-x scroll-smooth">
       {noggles.map((src, index) => (
         <motion.div
           key={src}

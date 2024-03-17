@@ -76,7 +76,7 @@ export default function WebCamComponent({
   }, [imageLoaded, modelsLoaded, selectedNoggle]);
 
   const capture = useCallback(() => {
-    const webcamImageSrc = webcamRef.current.getScreenshot();
+    const webcamImageSrc = webcamRef?.current?.getScreenshot();
     if (!webcamImageSrc) return;
 
     const webcamImage = new Image();
