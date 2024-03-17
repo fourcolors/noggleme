@@ -1,11 +1,11 @@
 import Image from "next/image";
-import WebcamComponent from "./components/WebCam";
+import WebCam from "./components/WebCam";
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
+    <main className="flex min-h-screen flex-col items-center justify-between bg-white p-24">
       <div>
-        <WebcamComponent />
+        <WebCam />
       </div>
     </main>
   );

@@ -1,35 +1,93 @@
 "use client";
-import React from "react";
+
+import { useRef, useEffect } from "react";
 import Webcam from "react-webcam";
+import * as faceapi from "face-api.js";
 
-const videoConstraints = {
-  width: 1280,
-  height: 720,
-  facingMode: "user",
-};
+export default function WebCamComponent() {
+  const webcamRef = useRef(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
-const WebcamComponent = () => {
-  const webcamRef = React.useRef<Webcam>(null);
-  const capture = React.useCallback(() => {
-    if (webcamRef.current) {
-      const imageSrc = webcamRef.current.getScreenshot();
-      console.log(imageSrc);
+  function loadModels() {
+    return Promise.all([
+      faceapi.loadTinyFaceDetectorModel("/models"),
+      faceapi.loadFaceLandmarkTinyModel("/models"),
+    ]);
+  }
+
+  useEffect(() => {
+    loadModels();
+  }, []);
+
+  const handleVideoOnPlay = () => {
+    console.log("video plays");
+    const video = webcamRef.current.video;
+    const canvas = canvasRef.current;
+
+    console.log("gets here");
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      console.log("Canvas context not found!");
+      return;
     }
-  }, [webcamRef]);
+
+    const displaySize = {
+      width: 460,
+      height: 500,
+    };
+
+    ctx.canvas.width = displaySize.width;
+    ctx.canvas.height = displaySize.height;
+
+    faceapi.matchDimensions(ctx, displaySize);
+
+    const intervalId = setInterval(async () => {
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      const detections = await faceapi
+        .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
+        .withFaceLandmarks(true);
+
+      const resizedDetections = faceapi.resizeResults(detections, displaySize);
+
+      faceapi.draw.drawDetections(ctx, resizedDetections);
+      faceapi.draw.drawFaceLandmarks(ctx, resizedDetections);
+
+      // Additional code to overlay glasses goes here
+    }, 100);
+
+    return () => {
+      clearInterval(intervalId);
+      video.removeEventListener("loadeddata", handleVideoOnPlay);
+    };
+  };
+
+  const videoConstraints = {
+    width: 1280,
+    height: 720,
+    facingMode: "user",
+  };
 
   return (
-    <div className="webcam-container flex-col">
-      <Webcam
-        audio={false}
-        height={720}
-        ref={webcamRef}
-        screenshotFormat="image/jpeg"
-        width={1280}
-        videoConstraints={videoConstraints}
-      />
-      <button onClick={capture}>Take Photo!</button>{" "}
-    </div>
+    <>
+      <div style={{ width: "640px", height: "500px", position: "relative" }}>
+        <canvas
+          width={460}
+          height={500}
+          ref={canvasRef}
+          style={{
+            zIndex: 100,
+            position: "absolute",
+            left: 0,
+            top: 0,
+          }}
+        />
+        <Webcam
+          videoConstraints={videoConstraints}
+          onUserMedia={handleVideoOnPlay}
+          ref={webcamRef}
+          style={{ position: "absolute" }}
+        />
+      </div>
+    </>
   );
-};
-
-export default WebcamComponent;
+}
