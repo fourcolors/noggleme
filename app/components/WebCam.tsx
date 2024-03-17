@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import { useCallback, useRef, useEffect, useState } from "react";
 import Webcam from "react-webcam";
 import * as faceapi from "face-api.js";
 
@@ -11,77 +11,94 @@ interface WebCamComponentProps {
 export default function WebCamComponent({
   selectedNoggle,
 }: WebCamComponentProps) {
-  const webcamRef = useRef(null);
+  const webcamRef = useRef<Webcam>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [selectedNoggles, setSelectedNoggles] = useState("");
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const imageRef = useRef(new Image());
 
-  function loadModels() {
+  const loadModels = useCallback(() => {
     return Promise.all([
       faceapi.loadTinyFaceDetectorModel("/models"),
       faceapi.loadFaceLandmarkTinyModel("/models"),
     ]);
-  }
-
-  useEffect(() => {
-    loadModels();
   }, []);
 
-  const handleVideoOnPlay = () => {
-    console.log("video plays");
-    const video = webcamRef.current.video;
+  useEffect(() => {
+    loadModels().then(() => {
+      const image = imageRef.current;
+      image.src = `/noggles/${selectedNoggle}.png`;
+      image.onload = () => setImageLoaded(true);
+    });
+  }, [loadModels, selectedNoggle]);
+
+  useEffect(() => {
+    if (!imageLoaded) return;
+
+    const video = webcamRef.current?.video;
     const canvas = canvasRef.current;
+    if (!video || !canvas) return;
 
-    if (!canvas || !video) return;
-
-    console.log("gets here");
     const ctx = canvas.getContext("2d");
-    if (!ctx) {
-      console.log("Canvas context not found!");
-      return;
-    }
+    if (!ctx) return;
 
-    const displaySize = {
-      width: 1280,
-      height: 720,
+    const displaySize = { width: video.width, height: video.height };
+    faceapi.matchDimensions(canvas, displaySize);
+
+    const onPlay = async () => {
+      if (
+        webcamRef.current &&
+        webcamRef.current.video &&
+        webcamRef.current.video.readyState === 4
+      ) {
+        ctx.clearRect(0, 0, displaySize.width, displaySize.height);
+
+        const detections = await faceapi
+          .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
+          .withFaceLandmarks(true);
+
+        const resizedDetections = faceapi.resizeResults(
+          detections,
+          displaySize,
+        );
+
+        const image = imageRef.current;
+        resizedDetections.forEach((detection) => {
+          const { landmarks } = detection;
+          const nose = landmarks.getNose();
+          const leftEye = landmarks.getLeftEye();
+          const rightEye = landmarks.getRightEye();
+          const noseCenter = nose[3];
+          const leftEyeCenter = leftEye[3];
+          const rightEyeCenter = rightEye[3];
+          const eyeDistance = Math.abs(leftEyeCenter.x - rightEyeCenter.x);
+          const noggleWidth = eyeDistance * 2;
+          const noggleHeight = noggleWidth * 0.6;
+          const noggleX = noseCenter.x - noggleWidth / 2;
+          const noggleY = noseCenter.y - noggleHeight / 1.1;
+
+          ctx.drawImage(image, noggleX, noggleY, noggleWidth, noggleHeight);
+        });
+
+        requestAnimationFrame(onPlay);
+      }
     };
 
-    ctx.canvas.width = displaySize.width;
-    ctx.canvas.height = displaySize.height;
-
-    faceapi.matchDimensions(ctx, displaySize);
-
-    const intervalId = setInterval(async () => {
-      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-      const detections = await faceapi
-        .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
-        .withFaceLandmarks(true);
-      const resizedDetections = faceapi.resizeResults(detections, displaySize);
-
-      faceapi.draw.drawDetections(ctx, resizedDetections);
-      faceapi.draw.drawFaceLandmarks(ctx, resizedDetections);
-
-      // Additional code to overlay glasses goes here
-    }, 100);
-
-    return () => {
-      clearInterval(intervalId);
-      video.removeEventListener("loadeddata", handleVideoOnPlay);
-    };
-  };
+    requestAnimationFrame(onPlay);
+  }, [imageLoaded, selectedNoggle]);
 
   const videoConstraints = {
-    width: 1280,
-    height: 720,
+    width: 500,
+    height: 500,
     facingMode: "user",
   };
 
   return (
     <>
-      <div style={{ width: "1280px", height: "720px", position: "relative" }}>
+      <div style={{ width: "500px", height: "500px", position: "relative" }}>
         <canvas
-          width={460}
-          height={500}
           ref={canvasRef}
+          width={500}
+          height={500}
           style={{
             zIndex: 100,
             position: "absolute",
@@ -91,8 +108,9 @@ export default function WebCamComponent({
         />
         <Webcam
           videoConstraints={videoConstraints}
-          onUserMedia={handleVideoOnPlay}
           ref={webcamRef}
+          width={500}
+          height={500}
           style={{ position: "absolute" }}
         />
       </div>
