@@ -15,7 +15,9 @@ export default function Main() {
         selectedNoggle={selectedNoggle}
         setSelectedNoggle={setSelectedNoggle}
       />
-      <WebCamComponent selectedNoggle={selectedNoggle} />
+      <div className="p-12 shadow-2xl bg-black">
+        <WebCamComponent selectedNoggle={selectedNoggle} />
+      </div>
     </>
   );
 }

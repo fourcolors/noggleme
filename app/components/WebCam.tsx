@@ -109,7 +109,7 @@ export default function WebCamComponent({
   };
 
   return (
-    <>
+    <div className="flex justify-center items-center flex-col">
       <div style={{ width: "500px", height: "500px", position: "relative" }}>
         <canvas
           ref={canvasRef}
@@ -120,12 +120,12 @@ export default function WebCamComponent({
         <Webcam
           videoConstraints={videoConstraints}
           ref={webcamRef}
-          style={{ position: "absolute" }}
+          style={{ position: "absolute", borderRadius: 20 }}
         />
       </div>
       <button
         onClick={capture}
-        className=" focus:ring-4 focus:ring-gray-300 my-4 rounded-full p-4 shadow-2xl transform active:scale-95 transition duration-150 ease-in-out text-white text-lg font-semibold flex items-center justify-center w-20 h-20 md:w-24 md:h-24"
+        className="bg-white mt-5 focus:ring-4 focus:ring-gray-300 my-4 rounded-full p-4 shadow-2xl transform active:scale-95 transition duration-150 ease-in-out text-white text-lg font-semibold flex items-center justify-center w-20 h-20 md:w-24 md:h-24"
         aria-label="Capture photo"
       >
         <NImage src="/camera.png" width={48} height={48} alt="camera" />
@@ -147,6 +147,6 @@ export default function WebCamComponent({
           </div>
         ))}
       </div>
-    </>
+    </div>
   );
 }
