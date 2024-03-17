@@ -123,16 +123,41 @@ export default function WebCamComponent({
           style={{ position: "absolute" }}
         />
       </div>
-      <button onClick={capture}>Capture photo</button>
-      <div className="flex flex-row mx-4">
-        {capturedImages.map((image, index) => (
-          <NImage
-            key={index}
-            src={image}
-            alt="captured"
-            width={50}
-            height={100}
+      <button
+        onClick={capture}
+        className="bg-gray-800 hover:bg-gray-700 focus:ring-4 focus:ring-gray-300 rounded-full p-4 shadow-lg transform active:scale-95 transition duration-150 ease-in-out text-white text-lg font-semibold flex items-center justify-center w-20 h-20 md:w-24 md:h-24"
+        aria-label="Capture photo"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-8 w-8 md:h-12 md:w-12"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 7h5l2 3h5a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2V9a2 2 0 012-2z"
           />
+        </svg>
+      </button>
+
+      <div className="flex flex-row mx-4 overflow-x-auto space-x-2">
+        {capturedImages.map((image, index) => (
+          <div
+            key={index}
+            className="shrink-0 hover:scale-105 transition-transform duration-200 ease-out"
+          >
+            <NImage
+              src={image}
+              alt="captured"
+              width={200}
+              height={100}
+              className="shadow-lg border border-gray-200 rounded-md"
+            />
+          </div>
         ))}
       </div>
     </>

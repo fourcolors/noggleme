@@ -16,18 +16,8 @@ export default function NoggleSelector({
   const noggles = Array.from({ length: 21 }, (_, i) => `/noggles/${i}.png`);
   const containerRef = useRef();
 
-  useEffect(() => {
-    // Center the selected item
-    const selectedItem = document.getElementById(`item-${selectedNoggle}`);
-    const scrollAmount =
-      selectedItem.offsetLeft +
-      selectedItem.offsetWidth / 2 -
-      containerRef.current.offsetWidth / 2;
-    containerRef.current.scrollLeft = scrollAmount;
-  }, [selectedNoggle]);
-
   return (
-    <div ref={containerRef} className="flex overflow-x scroll-smooth my-8">
+    <div ref={containerRef} className="flex overflow-x scroll-smooth">
       {noggles.map((src, index) => (
         <motion.div
           key={src}
@@ -42,6 +32,7 @@ export default function NoggleSelector({
             src={src}
             width={100}
             height={100}
+            content="responsive"
             alt={`Noggle ${index}`}
             className="w-24 h-24 object-contain"
           />
