@@ -32,8 +32,8 @@ export default function WebCamComponent() {
     }
 
     const displaySize = {
-      width: 460,
-      height: 500,
+      width: 1280,
+      height: 720,
     };
 
     ctx.canvas.width = displaySize.width;
@@ -69,7 +69,7 @@ export default function WebCamComponent() {
 
   return (
     <>
-      <div style={{ width: "640px", height: "500px", position: "relative" }}>
+      <div style={{ width: "1280px", height: "720px", position: "relative" }}>
         <canvas
           width={460}
           height={500}
