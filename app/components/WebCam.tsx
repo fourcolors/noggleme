@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Webcam from "react-webcam";
 import * as faceapi from "face-api.js";
+import NImage from "next/image";
 
 interface WebCamComponentProps {
   selectedNoggle: number;
@@ -11,6 +12,7 @@ interface WebCamComponentProps {
 export default function WebCamComponent({
   selectedNoggle,
 }: WebCamComponentProps) {
+  const [capturedImages, setCapturedImages] = useState<string[]>([]);
   const webcamRef = useRef<Webcam>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -73,6 +75,33 @@ export default function WebCamComponent({
     onPlay();
   }, [imageLoaded, modelsLoaded, selectedNoggle]);
 
+  const capture = useCallback(() => {
+    const webcamImageSrc = webcamRef.current.getScreenshot();
+    if (!webcamImageSrc) return;
+
+    const webcamImage = new Image();
+    webcamImage.src = webcamImageSrc;
+    webcamImage.onload = () => {
+      const canvasElement = canvasRef.current;
+      const drawingCanvas = document.createElement("canvas");
+      if (!canvasElement) return;
+
+      drawingCanvas.width = webcamImage.width;
+      drawingCanvas.height = webcamImage.height;
+
+      const ctx = drawingCanvas.getContext("2d");
+      if (!ctx) return;
+
+      ctx.drawImage(webcamImage, 0, 0, webcamImage.width, webcamImage.height);
+
+      ctx.drawImage(canvasElement, 0, 0, webcamImage.width, webcamImage.height);
+
+      const finalImageSrc = drawingCanvas.toDataURL("image/png");
+
+      setCapturedImages((prev) => [...prev, finalImageSrc]);
+    };
+  }, [webcamRef, canvasRef]);
+
   const videoConstraints = {
     width: 500,
     height: 500,
@@ -93,6 +122,18 @@ export default function WebCamComponent({
           ref={webcamRef}
           style={{ position: "absolute" }}
         />
+      </div>
+      <button onClick={capture}>Capture photo</button>
+      <div className="flex flex-row mx-4">
+        {capturedImages.map((image, index) => (
+          <NImage
+            key={index}
+            src={image}
+            alt="captured"
+            width={50}
+            height={100}
+          />
+        ))}
       </div>
     </>
   );
